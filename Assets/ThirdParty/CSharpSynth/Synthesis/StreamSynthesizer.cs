@@ -243,10 +243,14 @@ namespace CSharpSynth.Synthesis
             }
             keyRegistry.Clear();
         }
-        public void GetNext(byte[] buffer)
+		public void GetNext(byte[] buffer, int samplesForward)
         {//Call this to process the next part of audio and return it in raw form.
             ClearWorkingBuffer();
             FillWorkingBuffer();
+
+			//increment our sample count
+			seq.IncrementSampleCounter(samplesForward);
+
             for (int x = 0; x < effects.Count; x++)
             {
                 effects[x].doEffect(sampleBuffer);
@@ -255,16 +259,30 @@ namespace CSharpSynth.Synthesis
         }
 
         //UnitySynth
-        public void GetNext(float[] buffer)
+		public void GetNext(float[] buffer, int samplesForward)
         {//Call this to process the next part of audio and return it in raw form.
             ClearWorkingBuffer();
             FillWorkingBuffer();
+
+			//increment our sample count
+			seq.IncrementSampleCounter(samplesForward);
+
             for (int x = 0; x < effects.Count; x++)
             {
                 effects[x].doEffect(sampleBuffer);
             }
             ConvertBuffer(sampleBuffer, buffer);
         }
+			
+		public void GetNext(byte[] buffer)
+		{
+			GetNext(buffer, samplesperBuffer);
+		}
+
+		public void GetNext(float[] buffer)
+		{
+			GetNext(buffer, samplesperBuffer);
+		}
 
         public void AddEffect(BasicAudioEffect effect)
         {
@@ -428,8 +446,6 @@ namespace CSharpSynth.Synthesis
                         }
                     }
                 }
-                //increment our sample count
-                seq.IncrementSampleCounter(samplesperBuffer);
             }
             else //Manual mode
             {

@@ -99,11 +99,14 @@ namespace CSharpSynth.Sequencer
                     {
                         _MidiFile.Tracks[0].MidiEvents[x].deltaTime = lastSample + (uint)DeltaTimetoSamples(_MidiFile.Tracks[0].MidiEvents[x].deltaTime);
                         lastSample = _MidiFile.Tracks[0].MidiEvents[x].deltaTime;
-                        //Update tempo
+                        //TODO : Set the samples to "run" at a constant tempo, but send the tempo changes back to the MIDIPlayer or something
+						// For now, we assume a constant 120 btm
+						/*
                         if (_MidiFile.Tracks[0].MidiEvents[x].midiMetaEvent == MidiHelper.MidiMetaEvent.Tempo)
                         {
                             _MidiFile.BeatsPerMinute = MidiHelper.MicroSecondsPerMinute / System.Convert.ToUInt32(_MidiFile.Tracks[0].MidiEvents[x].Parameters[0]);
                         }
+                        */
                     }
                     //Set total time to proper value
                     _MidiFile.Tracks[0].TotalTime = _MidiFile.Tracks[0].MidiEvents[_MidiFile.Tracks[0].MidiEvents.Length-1].deltaTime;
@@ -120,6 +123,7 @@ namespace CSharpSynth.Sequencer
                 }
             }
             blockList.Clear();
+			/*
             if (UnloadUnusedInstruments == true)
             {
                 if (synth.SoundBank == null)
@@ -136,6 +140,7 @@ namespace CSharpSynth.Sequencer
                     synth.SwitchBank(BankManager.Count - 1);
                 }
             }
+            */
             return true;
         }
         public bool LoadMidi(string file, bool UnloadUnusedInstruments)
