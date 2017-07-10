@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 using CSharpSynth.Effects;
@@ -19,6 +20,7 @@ public class MIDIPlayer : MonoBehaviour
     public int midiNote = 60;
     public int midiNoteVolume = 100;
     public int midiInstrument = 1;
+	public Text tempoText;
     //Private 
     private float[] sampleBuffer;
     private float gain = 1f;
@@ -27,6 +29,8 @@ public class MIDIPlayer : MonoBehaviour
 
     private float sliderValue = 1.0f;
     private float maxSliderValue = 127.0f;
+
+	private float nextChange;
 
     // Awake is called when the script instance
     // is being loaded.
@@ -64,8 +68,22 @@ public class MIDIPlayer : MonoBehaviour
         if (!midiSequencer.isPlaying)
             //if (!GetComponent<AudioSource>().isPlaying)
             LoadSong(midiFilePath);
-    }
+		if (Input.GetKey ("z") && Time.time > nextChange) {
+			midiSequencer.tempo+=1;
+			nextChange = Time.time + 0.1f;
+		}
+		if (Input.GetKey ("x") && Time.time > nextChange) {
+			midiSequencer.tempo-=1;
+			nextChange = Time.time + 0.1f;
+		}
+		tempoText.text = midiSequencer.tempo.ToString();
 
+    }
+	IEnumerator TempoControl(int test)
+	{
+		yield return new WaitForSeconds(0.5f);
+		midiSequencer.tempo+=test;
+	}
     // See http://unity3d.com/support/documentation/ScriptReference/MonoBehaviour.OnAudioFilterRead.html for reference code
     //	If OnAudioFilterRead is implemented, Unity will insert a custom filter into the audio DSP chain.
     //

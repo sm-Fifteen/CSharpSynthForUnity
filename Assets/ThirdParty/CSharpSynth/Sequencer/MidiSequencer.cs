@@ -20,6 +20,9 @@ namespace CSharpSynth.Sequencer
         private MidiSequencerEvent seqEvt;
         private int sampleTime;
         private int eventIndex;
+		private float[] tempoTab;
+		private uint[] original;
+		public int tempo = 120;
         //--Events
         public delegate void NoteOnEventHandler(int channel, int note, int velocity);
         public event NoteOnEventHandler NoteOnEvent;
@@ -92,6 +95,8 @@ namespace CSharpSynth.Sequencer
                 {
                     //Combine all tracks into 1 track that is organized from lowest to highest abs time
                     _MidiFile.CombineTracks();
+                    tempoTab = new float[_MidiFile.Tracks[0].MidiEvents.Length];
+                    original = new uint[_MidiFile.Tracks[0].MidiEvents.Length];
                     //Convert delta time to sample time
                     eventIndex = 0;
                     uint lastSample = 0;
@@ -99,11 +104,13 @@ namespace CSharpSynth.Sequencer
                     {
                         _MidiFile.Tracks[0].MidiEvents[x].deltaTime = lastSample + (uint)DeltaTimetoSamples(_MidiFile.Tracks[0].MidiEvents[x].deltaTime);
                         lastSample = _MidiFile.Tracks[0].MidiEvents[x].deltaTime;
+                        original[x]=lastSample;
                         //Update tempo
                         if (_MidiFile.Tracks[0].MidiEvents[x].midiMetaEvent == MidiHelper.MidiMetaEvent.Tempo)
                         {
                             _MidiFile.BeatsPerMinute = MidiHelper.MicroSecondsPerMinute / System.Convert.ToUInt32(_MidiFile.Tracks[0].MidiEvents[x].Parameters[0]);
                         }
+						tempoTab[x]= _MidiFile.BeatsPerMinute * 1.0f;
                     }
                     //Set total time to proper value
                     _MidiFile.Tracks[0].TotalTime = _MidiFile.Tracks[0].MidiEvents[_MidiFile.Tracks[0].MidiEvents.Length-1].deltaTime;
@@ -216,6 +223,7 @@ namespace CSharpSynth.Sequencer
         }
         public MidiSequencerEvent Process(int frame)
         {
+			uint temp;
             seqEvt.Events.Clear();
             //stop or loop
             if (sampleTime >= (int)_MidiFile.Tracks[0].TotalTime)
@@ -243,6 +251,8 @@ namespace CSharpSynth.Sequencer
             {
                 seqEvt.Events.Add(_MidiFile.Tracks[0].MidiEvents[eventIndex]);
                 eventIndex++;
+				temp = (uint)(_MidiFile.Tracks [0].MidiEvents [eventIndex-1].deltaTime+((original[eventIndex]-original[eventIndex-1])*(tempoTab[eventIndex]/tempo)));
+				_MidiFile.Tracks [0].MidiEvents [eventIndex].deltaTime = temp;
             }
             return seqEvt;
         }
