@@ -23,7 +23,10 @@ namespace CSharpSynth.Sequencer
         private float[] tempoTab;
         private uint[] deltaTab;
         public uint playbackTempo {get; set;}
-        public byte playbackVelocity {get; set;}
+        public float targetTempo { get; internal set; }
+        public float velocityScale{get; set;}
+        public byte playbackVelocity {get; internal set;}
+        public byte targetVelocity { get; internal set; }
         //--Events
         public delegate void NoteOnEventHandler(int channel, int note, int velocity);
         public event NoteOnEventHandler NoteOnEvent;
@@ -256,15 +259,17 @@ namespace CSharpSynth.Sequencer
             while (eventIndex < _MidiFile.Tracks[0].EventCount - 1 && _MidiFile.Tracks[0].MidiEvents[eventIndex].deltaTime < (sampleTime + frame))
             {
                 seqEvt.Events.Add(_MidiFile.Tracks[0].MidiEvents[eventIndex]);
-                float midiTempo = tempoTab[eventIndex];
+                targetTempo = tempoTab[eventIndex];
                 MidiEvent currentEvent = _MidiFile.Tracks[0].MidiEvents[eventIndex];
                 eventIndex++;
                 MidiEvent nextEvent = _MidiFile.Tracks[0].MidiEvents[eventIndex];
                 uint midiDeltaDiff = (deltaTab[eventIndex] - deltaTab[eventIndex - 1]);
 
-                nextEvent.deltaTime = (uint)(currentEvent.deltaTime + (midiDeltaDiff * (midiTempo / playbackTempo)));
+                nextEvent.deltaTime = (uint)(currentEvent.deltaTime + (midiDeltaDiff * (targetTempo / playbackTempo)));
 
                 if (nextEvent.isChannelEvent() && nextEvent.midiChannelEvent == MidiHelper.MidiChannelEvent.Note_On) {
+                    targetVelocity = nextEvent.parameter2;
+                    playbackVelocity = (byte) Math.Min(nextEvent.parameter2 * velocityScale, 127f);
                     nextEvent.parameter2 = playbackVelocity;
                 }
             }
