@@ -20,11 +20,13 @@ public class MIDIPlayer : MonoBehaviour
     public int midiNote = 60;
     public int midiNoteVolume = 100;
     public int midiInstrument = 1;
-    public float targetTempo = 120;
+
     [Range(1, 240)] public uint currentTempo = 120;
-    public byte targetVelocity = 64;
-    public byte currentVelocity = 64;
     [Range(0, 2)] public float velocityScale = 1;
+
+    public float targetTempo { get { return midiSequencer.targetTempo; } }
+    public byte targetVelocity { get { return midiSequencer.targetVelocity; } }
+    public byte currentVelocity { get { return midiSequencer.playbackVelocity; } }
 
     //Private 
     private float[] sampleBuffer;
@@ -68,14 +70,11 @@ public class MIDIPlayer : MonoBehaviour
     // MonoBehaviour is enabled.
     void Update()
     {
-        if (!midiSequencer.isPlaying)
-            //if (!GetComponent<AudioSource>().isPlaying)
-            LoadSong(midiFilePath);
-            midiSequencer.playbackTempo = currentTempo;
-            midiSequencer.velocityScale = velocityScale;
-            targetTempo = midiSequencer.targetTempo;
-            targetVelocity = midiSequencer.targetVelocity;
-            currentVelocity = midiSequencer.playbackVelocity;
+        //if (!GetComponent<AudioSource>().isPlaying)
+        if (!midiSequencer.isPlaying) LoadSong(midiFilePath);
+
+        midiSequencer.playbackTempo = currentTempo;
+        midiSequencer.velocityScale = velocityScale;
     }
 
     // See http://unity3d.com/support/documentation/ScriptReference/MonoBehaviour.OnAudioFilterRead.html for reference code
