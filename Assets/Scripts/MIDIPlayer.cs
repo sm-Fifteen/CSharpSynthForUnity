@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 using CSharpSynth.Effects;
@@ -19,6 +20,7 @@ public class MIDIPlayer : MonoBehaviour
     public int midiNote = 60;
     public int midiNoteVolume = 100;
     public int midiInstrument = 1;
+	[Range(1, 240)] public uint currentTempo = 120;
     //Private 
     private float[] sampleBuffer;
     private float gain = 1f;
@@ -64,6 +66,8 @@ public class MIDIPlayer : MonoBehaviour
         if (!midiSequencer.isPlaying)
             //if (!GetComponent<AudioSource>().isPlaying)
             LoadSong(midiFilePath);
+        midiSequencer.playbackTempo = currentTempo;
+    		//tempoText.text = currentTempo.ToString();
     }
 
     // See http://unity3d.com/support/documentation/ScriptReference/MonoBehaviour.OnAudioFilterRead.html for reference code
@@ -82,8 +86,10 @@ public class MIDIPlayer : MonoBehaviour
     //	so calling into many Unity functions from this function is not allowed ( a warning will show up ). 	
     private void OnAudioFilterRead(float[] data, int channels)
     {
-        //This uses the Unity specific float method we added to get the buffer
-        midiStreamSynthesizer.GetNext(sampleBuffer);
+		// This fakes the amount of "frames" the synthesizer needs to go forwards at each update. Not very clean, but it'll have to do for now.
+		// FIXME : We'll be stepping over some events if we go past 1024 frames per step, though
+		int samplesForward = (int)((currentTempo/15) * 128);
+		midiStreamSynthesizer.GetNext(sampleBuffer);
 
         for (int i = 0; i < data.Length; i++)
         {

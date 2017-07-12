@@ -20,6 +20,9 @@ namespace CSharpSynth.Sequencer
         private MidiSequencerEvent seqEvt;
         private int sampleTime;
         private int eventIndex;
+        private float[] tempoTab;
+        private uint[] deltaTab;
+        public uint playbackTempo {get; set;}
         //--Events
         public delegate void NoteOnEventHandler(int channel, int note, int velocity);
         public event NoteOnEventHandler NoteOnEvent;
@@ -86,24 +89,32 @@ namespace CSharpSynth.Sequencer
             if (playing == true)
                 return false;
             _MidiFile = midi;
+            playbackTempo = 120;
+
             if (_MidiFile.SequencerReady == false)
             {
                 try
                 {
                     //Combine all tracks into 1 track that is organized from lowest to highest abs time
                     _MidiFile.CombineTracks();
+                    tempoTab = new float[_MidiFile.Tracks[0].MidiEvents.Length];
+                    deltaTab = new uint[_MidiFile.Tracks[0].MidiEvents.Length];
                     //Convert delta time to sample time
                     eventIndex = 0;
-                    uint lastSample = 0;
+                    uint lastDelta = 0;
                     for (int x = 0; x < _MidiFile.Tracks[0].MidiEvents.Length; x++)
                     {
-                        _MidiFile.Tracks[0].MidiEvents[x].deltaTime = lastSample + (uint)DeltaTimetoSamples(_MidiFile.Tracks[0].MidiEvents[x].deltaTime);
-                        lastSample = _MidiFile.Tracks[0].MidiEvents[x].deltaTime;
+                        _MidiFile.Tracks[0].MidiEvents[x].deltaTime = lastDelta + (uint)DeltaTimetoSamples(_MidiFile.Tracks[0].MidiEvents[x].deltaTime);
+                        lastDelta = _MidiFile.Tracks[0].MidiEvents[x].deltaTime;
+                        deltaTab[x]= lastDelta;
+
                         //Update tempo
                         if (_MidiFile.Tracks[0].MidiEvents[x].midiMetaEvent == MidiHelper.MidiMetaEvent.Tempo)
                         {
                             _MidiFile.BeatsPerMinute = MidiHelper.MicroSecondsPerMinute / System.Convert.ToUInt32(_MidiFile.Tracks[0].MidiEvents[x].Parameters[0]);
                         }
+
+						tempoTab[x] = _MidiFile.BeatsPerMinute * 1.0f;
                     }
                     //Set total time to proper value
                     _MidiFile.Tracks[0].TotalTime = _MidiFile.Tracks[0].MidiEvents[_MidiFile.Tracks[0].MidiEvents.Length-1].deltaTime;
@@ -120,6 +131,7 @@ namespace CSharpSynth.Sequencer
                 }
             }
             blockList.Clear();
+			/*
             if (UnloadUnusedInstruments == true)
             {
                 if (synth.SoundBank == null)
@@ -136,6 +148,7 @@ namespace CSharpSynth.Sequencer
                     synth.SwitchBank(BankManager.Count - 1);
                 }
             }
+            */
             return true;
         }
         public bool LoadMidi(string file, bool UnloadUnusedInstruments)
@@ -239,10 +252,16 @@ namespace CSharpSynth.Sequencer
                     return null;
                 }
             }
-            while (eventIndex < _MidiFile.Tracks[0].EventCount && _MidiFile.Tracks[0].MidiEvents[eventIndex].deltaTime < (sampleTime + frame))
+            while (eventIndex < _MidiFile.Tracks[0].EventCount - 1 && _MidiFile.Tracks[0].MidiEvents[eventIndex].deltaTime < (sampleTime + frame))
             {
                 seqEvt.Events.Add(_MidiFile.Tracks[0].MidiEvents[eventIndex]);
+                float midiTempo = tempoTab[eventIndex];
+                MidiEvent currentEvent = _MidiFile.Tracks[0].MidiEvents[eventIndex];
                 eventIndex++;
+                MidiEvent nextEvent = _MidiFile.Tracks[0].MidiEvents[eventIndex];
+                uint midiDeltaDiff = (deltaTab[eventIndex] - deltaTab[eventIndex - 1]);
+
+                nextEvent.deltaTime = (uint)(currentEvent.deltaTime + (midiDeltaDiff * (midiTempo / playbackTempo)));
             }
             return seqEvt;
         }
