@@ -23,6 +23,7 @@ namespace CSharpSynth.Sequencer
         private float[] tempoTab;
         private uint[] deltaTab;
         public uint playbackTempo {get; set;}
+        public byte playbackVelocity {get; set;}
         //--Events
         public delegate void NoteOnEventHandler(int channel, int note, int velocity);
         public event NoteOnEventHandler NoteOnEvent;
@@ -262,6 +263,10 @@ namespace CSharpSynth.Sequencer
                 uint midiDeltaDiff = (deltaTab[eventIndex] - deltaTab[eventIndex - 1]);
 
                 nextEvent.deltaTime = (uint)(currentEvent.deltaTime + (midiDeltaDiff * (midiTempo / playbackTempo)));
+
+                if (nextEvent.isChannelEvent() && nextEvent.midiChannelEvent == MidiHelper.MidiChannelEvent.Note_On) {
+                    nextEvent.parameter2 = playbackVelocity;
+                }
             }
             return seqEvt;
         }

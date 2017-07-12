@@ -21,6 +21,8 @@ public class MIDIPlayer : MonoBehaviour
     public int midiNoteVolume = 100;
     public int midiInstrument = 1;
 	[Range(1, 240)] public uint currentTempo = 120;
+    [Range(1, 127)] public byte currentVelocity = 64;
+
     //Private 
     private float[] sampleBuffer;
     private float gain = 1f;
@@ -66,7 +68,8 @@ public class MIDIPlayer : MonoBehaviour
         if (!midiSequencer.isPlaying)
             //if (!GetComponent<AudioSource>().isPlaying)
             LoadSong(midiFilePath);
-        midiSequencer.playbackTempo = currentTempo;
+            midiSequencer.playbackTempo = currentTempo;
+            midiSequencer.playbackVelocity = currentVelocity;
     		//tempoText.text = currentTempo.ToString();
     }
 
