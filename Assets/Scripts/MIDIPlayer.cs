@@ -34,6 +34,9 @@ public class MIDIPlayer : MonoBehaviour
     private MidiSequencer midiSequencer;
     private StreamSynthesizer midiStreamSynthesizer;
 
+	private bool mouseWasDown = false;
+	private float lastTime = 0.0f;
+
     private float sliderValue = 1.0f;
     private float maxSliderValue = 127.0f;
 
@@ -75,6 +78,43 @@ public class MIDIPlayer : MonoBehaviour
 
         midiSequencer.playbackTempo = currentTempo;
         midiSequencer.velocityScale = velocityScale;
+
+
+		if (Time.time - lastTime > 30) {
+			lastTime = 0;
+			mouseWasDown = false;
+		}
+		/*FOR NOW: holding t to change tempo, holding v to change volume
+		tempo works by moving the mouse up and down like conductors (Chef d'orchestre ) */
+		if(Input.GetKey("t")){
+			
+			if(Input.GetAxis("Mouse Y")<0){
+				mouseWasDown = true;
+			}
+			if(Input.GetAxis("Mouse Y")>0){
+				if (mouseWasDown) {
+					if (lastTime>0) {
+						currentTempo = (uint)(60/(Time.time - lastTime));
+						print ((uint)(Time.time - lastTime));
+					}
+					lastTime = Time.time;
+					mouseWasDown = false;
+				}
+			}
+		}
+		if (Input.GetKey ("v")) {
+			
+			if (Input.GetAxis ("Mouse X") < 0) {
+				velocityScale = velocityScale - 0.02f;
+				if (velocityScale < 0)
+					velocityScale = 0;
+			}
+			if (Input.GetAxis ("Mouse X") > 0) {
+				velocityScale = velocityScale + 0.02f;
+				if (velocityScale > 2)
+					velocityScale = 2;
+			}
+		}
     }
 
     // See http://unity3d.com/support/documentation/ScriptReference/MonoBehaviour.OnAudioFilterRead.html for reference code
