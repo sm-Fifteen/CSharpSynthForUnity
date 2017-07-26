@@ -46,8 +46,6 @@ public class MIDIPlayer : MonoBehaviour
 
         midiStreamSynthesizer.LoadBank(bankFilePath);
 
-        LoadSong(midiFilePath);
-
         //These will be fired by the midiSequencer when a song plays. Check the console for messages if you uncomment these
         //midiSequencer.NoteOnEvent += new MidiSequencer.NoteOnEventHandler (MidiNoteOnHandler);
         //midiSequencer.NoteOffEvent += new MidiSequencer.NoteOffEventHandler (MidiNoteOffHandler);			
@@ -60,11 +58,14 @@ public class MIDIPlayer : MonoBehaviour
         midiSequencer.Play();
     }
 
-    // Start is called just before any of the
-    // Update methods is called the first time.
-    void Start()
+    void OnEnable()
     {
+		LoadSong(midiFilePath);
     }
+
+	void OnDisable() {
+		midiSequencer.Stop (true);
+	}
 
     // Update is called every frame, if the
     // MonoBehaviour is enabled.
