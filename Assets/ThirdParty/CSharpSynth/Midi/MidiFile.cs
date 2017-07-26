@@ -52,10 +52,10 @@ namespace CSharpSynth.Midi
             Stream midiStream = null;
             try
             {
-                //UnitySynth
-                //midiStream = File.Open(filename, FileMode.Open);
-                TextAsset midiFileName = Resources.Load(filename) as TextAsset;
-                midiStream = new MemoryStream(midiFileName.bytes);
+                midiStream = File.Open(filename, FileMode.Open);
+				//UnitySynth
+                //TextAsset midiFileName = Resources.Load(filename) as TextAsset;
+                //midiStream = new MemoryStream(midiFileName.bytes);
                 loadStream(midiStream);
             }
             catch (Exception ex)
